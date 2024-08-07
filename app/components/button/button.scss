@@ -1,0 +1,25 @@
+.button {
+  border: none;
+  width: 192px;
+  height: 24px;
+  background: #4587ed;
+  border-radius: 6px;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  cursor: pointer;
+  &:hover {
+    background: #3573d2;
+  }
+  &:active {
+    background: #225cb5;
+  }
+  &:disabled {
+    background: #abc7f2;
+    color: #d2dff3;
+  }
+}
