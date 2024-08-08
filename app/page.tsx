@@ -1,3 +1,4 @@
+
 import Table from "./components/table/Table";
 import "./pageHome.scss";
 

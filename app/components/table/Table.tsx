@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Button from "../button/Button";
 import "./table.scss";
 import clsx from "clsx";
@@ -17,25 +17,20 @@ export default function Table({ numberHome }: TableProps) {
   const [showRooms, setShowRooms] = useState(false);
 
   const [activeEntranceIndex, setActiveEntranceIndex] = useState(-1);
-  const [activeRoomIndex, setActiveRoomIndex] = useState(-1);
+  const [activeRoomIndexId, setActiveRoomIndexId] = useState<number[]>([]);
 
   interface ChangeItemProp {
     entrance: null | number;
-    room: null | number;
+    room: null | number[];
   }
   const [changeItem, setChangeItem] = useState<ChangeItemProp>({
     entrance: null,
-    room: null,
+    room: [],
   });
-
   const [stateTable, setStateTable] = useState<object[]>([]);
 
   function handleClickActiveEntrance(index: number) {
     setActiveEntranceIndex(index);
-  }
-
-  function handleClickActiveRoom(index: number) {
-    setActiveRoomIndex(index);
   }
 
   function handleClickTrashButton() {
@@ -48,16 +43,16 @@ export default function Table({ numberHome }: TableProps) {
 
   function handleClickHeaderEntranceButton() {
     setActiveEntranceIndex(-1);
-    setActiveRoomIndex(-1);
+    setActiveRoomIndexId([]);
     setShowEntrance(false);
     if (showRooms) {
       setShowRooms(false);
     } else false;
   }
 
-  function handleClickEntranceItem(index: number, itemEntrance: number) {
+  function handleClickEntranceItem(itemEntrance: number) {
     setShowRooms(true);
-    handleClickActiveEntrance(index);
+    handleClickActiveEntrance(itemEntrance);
     setChangeItem({ ...changeItem, entrance: itemEntrance });
   }
 
@@ -65,9 +60,19 @@ export default function Table({ numberHome }: TableProps) {
     setShowRooms(false);
   }
 
-  function handleClickRoomItem(index: number, itemRoom: number) {
-    handleClickActiveRoom(index);
-    setChangeItem({ ...changeItem, room: itemRoom });
+  function handleClickRoomItem(itemRoom: number) {
+    toggleClassRoom(itemRoom);
+  }
+
+  function toggleClassRoom(room: number) {
+    const newActiveRoomIndexId = [...activeRoomIndexId];
+    if (newActiveRoomIndexId.includes(room)) {
+      newActiveRoomIndexId.splice(newActiveRoomIndexId.indexOf(room), 1);
+    } else {
+      newActiveRoomIndexId.push(room);
+    }
+    setActiveRoomIndexId(newActiveRoomIndexId);
+    setChangeItem({ ...changeItem, room: newActiveRoomIndexId });
   }
 
   function handleClickButtonAdded() {
@@ -110,7 +115,13 @@ export default function Table({ numberHome }: TableProps) {
         <div className="header__btns">
           <div
             className="btns__btn btns__btn--del"
+            tabIndex={1}
             onClick={handleClickTrashButton}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleClickTrashButton();
+              }
+            }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -170,8 +181,14 @@ export default function Table({ numberHome }: TableProps) {
             </svg>
           </div>
           <div
+            tabIndex={1}
             className="btns__btn btns__btn--plus"
             onClick={handleClickAddButton}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleClickAddButton();
+              }
+            }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -215,9 +232,9 @@ export default function Table({ numberHome }: TableProps) {
         </div>
         <div className="content__column">
           <div className="column__title">Номер квартиры</div>
-          {stateTable?.map((item: { room?: number }, index) => (
+          {stateTable?.map((item: { room?: number[] }, index) => (
             <div key={index} className="column__row">
-              {item.room}
+              {item.room?.sort().join(",")}
             </div>
           ))}
           {listRow()}
@@ -233,8 +250,14 @@ export default function Table({ numberHome }: TableProps) {
         <div className="list-entrance__header">
           <div className="header__title">Номер подъезда</div>
           <div
+            tabIndex={1}
             className="header__btn"
             onClick={handleClickHeaderEntranceButton}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleClickHeaderEntranceButton();
+              }
+            }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -261,14 +284,20 @@ export default function Table({ numberHome }: TableProps) {
           </div>
         </div>
         <div className="list-entrance__content">
-          {entrances.map((entrance, index) => (
+          {entrances.map((entrance) => (
             <div
               key={entrance}
+              tabIndex={1}
               className={clsx(
                 "content__item",
-                activeEntranceIndex === index && "content__item--active"
+                activeEntranceIndex === entrance && "content__item--active"
               )}
-              onClick={() => handleClickEntranceItem(index, entrance)}
+              onClick={() => handleClickEntranceItem(entrance)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleClickEntranceItem(entrance);
+                }
+              }}
             >
               Подъезд {entrance}
             </div>
@@ -284,7 +313,16 @@ export default function Table({ numberHome }: TableProps) {
       >
         <div className="list-room__header">
           <div className="header__title">Номер квартиры</div>
-          <div className="header__btn" onClick={handleClickHeaderRoomButton}>
+          <div
+            className="header__btn"
+            onClick={handleClickHeaderRoomButton}
+            tabIndex={1}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleClickHeaderRoomButton();
+              }
+            }}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width={20}
@@ -310,19 +348,35 @@ export default function Table({ numberHome }: TableProps) {
           </div>
         </div>
         <div className="list-room__content">
-          {rooms.map((room, index) => (
+          {rooms.map((room) => (
             <div
               key={room}
+              tabIndex={1}
               className={clsx(
                 "content__item",
-                activeRoomIndex === index && "content__item--active"
+                activeRoomIndexId.includes(room) && "content__item--active"
               )}
-              onClick={() => handleClickRoomItem(index, room)}
+              onClick={() => handleClickRoomItem(room)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleClickRoomItem(room);
+                }
+              }}
             >
               Квартира {room}
             </div>
           ))}
-          <Button onClick={handleClickButtonAdded} />
+          <Button
+            onClick={handleClickButtonAdded}
+            tabIndex={1}
+            onKeyDown={(e) => {
+              if (e.code === "Enter" && e.code === "Enter") {
+                handleClickButtonAdded();
+              } else if (e.code === "Enter") {
+                console.log("stop");
+              }
+            }}
+          />
         </div>
       </div>
     </div>
